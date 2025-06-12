@@ -13,20 +13,20 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd xml zip mysqli pdo pdo_mysql pdo_pgsql pgsql intl exif soap opcache
 
-# Habilita mod_rewrite de Apache
 RUN a2enmod rewrite
 
-# Crea moodledata y asigna permisos correctos
-RUN mkdir -p /var/www/moodledata && chown -R www-data:www-data /var/www/moodledata
+RUN mkdir -p /var/www/moodledata
 
-# Ajusta max_input_vars para Moodle (requisito mínimo 5000)
-RUN echo "max_input_vars = 5000" > /usr/local/etc/php/conf.d/max_input_vars.ini
-
-# Copia el código fuente de Moodle
 COPY . /var/www/html/
 
-# Asigna permisos correctos a los archivos de Moodle
-RUN chown -R www-data:www-data /var/www/html
+# Asegura permisos correctos en html y moodledata para el usuario www-data
+RUN chown -R www-data:www-data /var/www/html /var/www/moodledata \
+    && find /var/www/html -type d -exec chmod 755 {} \; \
+    && find /var/www/html -type f -exec chmod 644 {} \; \
+    && find /var/www/moodledata -type d -exec chmod 770 {} \; \
+    && find /var/www/moodledata -type f -exec chmod 660 {} \;
+
+RUN echo "max_input_vars = 5000" > /usr/local/etc/php/conf.d/max_input_vars.ini
 
 EXPOSE 80
 
